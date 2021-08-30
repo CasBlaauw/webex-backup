@@ -7,18 +7,19 @@ on:
 jobs:
   # Initiate a release to add files to
   createrelease:
-    name: Create Release
+    name: Create release
     runs-on: [ubuntu-latest]
     steps:
     - name: Create Release
       id: create_release
-      uses: actions/create-release@v1
+      uses: "marvinpinto/action-automatic-releases@latest"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        release_name: Current release (${{ github.ref }})
-        draft: false
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "latest"
         prerelease: false
+        title: "Current release"
     - name: Output Release URL File
       run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
     - name: Save Release URL File for publish
