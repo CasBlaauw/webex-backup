@@ -295,7 +295,6 @@ def get_messages(mytoken, myroom, myMaxMessages):
         try:
             result = requests.get('https://api.ciscospark.com/v1/messages', headers=headers, params=payload)
             messageCount += len(result.json()["items"])
-            print(">> messageCount= " + str(messageCount))
             if "Link" in result.headers and messageCount < maxTotalMessages:  # there's MORE messages
                 resultjsonmessages = resultjsonmessages + result.json()["items"]
                 # When retrieving multiple batches _check_ if the last message retrieved
@@ -308,7 +307,6 @@ def get_messages(mytoken, myroom, myMaxMessages):
                         maxTotalMessages = next((index for (index,d) in enumerate(resultjsonmessages) if timedifferencedays(d["created"]) > msgMaxAge), 99999)
                         print(str(maxTotalMessages))
                         break
-                print("          messages retrieved: " + str(messageCount))
                 myBeforeMessage = result.headers.get('Link').split("beforeMessage=")[1].split(">")[0]
                 payload = {'roomId': myroom, 'max': myMaxMessages, 'beforeMessage': myBeforeMessage}
                 continue
@@ -318,7 +316,7 @@ def get_messages(mytoken, myroom, myMaxMessages):
                     msgAge = timedifferencedays(result.json()["items"][-1]["created"])
                     lastMsgLocation = next((index for (index,d) in enumerate(resultjsonmessages) if timedifferencedays(d["created"]) > msgMaxAge), 99999)
                     maxTotalMessages = lastMsgLocation
-                print("          FINISHED total messages: " + str(messageCount))
+                print("          Total messages: " + str(messageCount))
                 if "Link" in result.headers:   # There ARE more messages but the maxTotalMessages has been reached
                     print("          Reached configured maximum # messages (" + str(maxTotalMessages) + ")")
                 break
@@ -425,13 +423,16 @@ def process_Files(fileData):
             filename = "error-getting-filename"
             myErrorList.append("def process_Files Header 'content-disposition' error for url: " + url)
         filename = format_filename(filename)
-        filesize = convert_size(int(r.headers['Content-Length']))
+        try:
+            filesize = convert_size(int(r.headers['Content-Length']))
+        except:
+            filesize = 'could not determine filesize'
         fileextension = os.path.splitext(filename)[1][1:].replace("\"","")
         filenamepart = os.path.splitext(filename)[0]
-        if int(r.headers['Content-Length']) <= 0:
-            # Not downloading 0 Byte files, only show the filename
-            filelist.append(filename + "###" + filesize)
-            continue
+        # if int(r.headers['Content-Length']) <= 0:
+        #     # Not downloading 0 Byte files, only show the filename
+        #     filelist.append(filename + "###" + filesize)
+        #     continue
         if downloadFiles not in ['images', 'files']:
             # No file downloading --> just get the filename + size
             filelist.append(filename + "###" + filesize)
@@ -730,7 +731,8 @@ print("\n\n #0 ========================= START =========================")
 for name, id in all_ids.items():
     myRoom = id
 
-    # =====  CHECK FOR EMPTY SPACES
+    # =====  CHECK FOR EMPTY SPACES ================================================
+    #   if there are no messages in the space (possible if it only contains calls), skip this space
     if check_empty_space(myToken, myRoom):
         continue
 
@@ -739,9 +741,9 @@ for name, id in all_ids.items():
     startTimer()
     try:
         roomName = get_roomname(myToken, myRoom)
-        print(" #1 ----- Get SPACE NAME: '" + roomName + "'")
+        print(" #1 ----- Get space name: '" + roomName + "'")
     except Exception as e:
-        print(" #1 ----- get SPACE NAME: **ERROR** getting space name")
+        print(" #1 ----- Get space name: **ERROR** getting space name")
         print("             Error message: " + str(e))
         beep(3)
         exit()
@@ -781,7 +783,7 @@ for name, id in all_ids.items():
     # myMembers used # of space members (stats).
     # myMemberList is used to get the displayName of users (msg only show email address - personEmail)
     startTimer()
-    print(" #3 ----- Get MEMBER List") # Put ALL members in a dictionary that contains: "email + fullname"
+    print(" #3 ----- Get member List") # Put ALL members in a dictionary that contains: "email + fullname"
     try:
         myMembers = get_memberships(myToken, myRoom, 500)
         for members in myMembers:
@@ -799,16 +801,15 @@ for name, id in all_ids.items():
 
     # =====  CREATE FOLDERS FOR ATTACHMENTS & AVATARS ==============================
     startTimer()
-    print(" #4a ----- Create folder for HTML. Download files? " + downloadFiles)
-    if not os.path.exists(myAttachmentFolder):
-        print("             folder does NOT exist: " + myAttachmentFolder)
-    else:   # check if folder-01 exists, if yes, check if folder-02 exists, etc.
+    print(f" #4 ---- Creating folder for HTML and attachments. Downloading files or just images: {downloadFiles} ")
+    if os.path.exists(myAttachmentFolder):
+        # If folder already exists, check folder-01, etc., until we can create a new folder.
         folderCounter = 1
-        print("             folder EXISTS. Checking if " + myAttachmentFolder + "-" + "{:02d}".format(folderCounter) + " exists!")
-        while os.path.exists(myAttachmentFolder + "-" + "{:02d}".format(folderCounter)):
+        print(f"             Folder already exists. Checking if {myAttachmentFolder}-{folderCounter:02d} exists!")
+        while os.path.exists(f"{myAttachmentFolder}-{folderCounter:02d}"):
             folderCounter += 1
-        myAttachmentFolder += "-" + "{:02d}".format(folderCounter)
-    print("             Attachment Folder: " + myAttachmentFolder)
+        myAttachmentFolder += f"-{folderCounter:02d}"
+    print("          Attachment Folder: " + myAttachmentFolder)
     os.makedirs(myAttachmentFolder)
     if userAvatar == "download":
         os.makedirs(myAttachmentFolder + "/avatars/")
@@ -824,7 +825,7 @@ for name, id in all_ids.items():
     # =====  GET MEMBER AVATARS ====================================================
     startTimer()
     if userAvatar == "link" or userAvatar == "download":
-        print(" #4b----- MEMBER Avatars: collect avatar Data (" + str(len(uniqueUserIds)) + ")  ", end='', flush=True)
+        print(" #5----- Avatars: collecting avatar Data (" + str(len(uniqueUserIds)) + ")  ", end='', flush=True)
         userAvatarDict = dict()  # userAvatarDict[your@email.com] = "https://webexteamsavatarurl"
         x=0
         y=len(uniqueUserIds)
