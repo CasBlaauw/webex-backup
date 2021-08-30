@@ -270,7 +270,7 @@ def get_memberships(mytoken, myroom, maxmembers):
                 continue
             else:
                 resultjson += result.json()["items"]
-                print("          Number of space members: " + str(len(resultjson)))
+                print("          People in this space: " + str(len(resultjson)))
                 break
         except requests.exceptions.RequestException as e: # A serious problem, like an SSLError or InvalidURL
             if e.status_code == 429:
@@ -352,12 +352,13 @@ def get_roomname(mytoken, myroom):
     try:
         result = requests.get('https://api.ciscospark.com/v1/rooms/' + myroom, headers=headers)
         if result.status_code == 401:   # WRONG ACCESS TOKEN
-            print("    -------------------------- ERROR ------------------------")
-            print("       Please check your Access Token in the .ini file.")
-            print("           Note that your Access Token is only valid for 12 hours.")
-            print("           Go here to get a new token:")
-            print("           https://developer.webex.com/docs/api/getting-started")
-            print("    ------------------------- STOPPED ----------------------- \n\n\n")
+            print(""""\n\n\n
+                    -------------------------- ERROR ------------------------
+                Please check your Personal Access Token.
+                Note that your Access Token is only valid for 12 hours.
+                Go here to get a new token:
+                https://developer.webex.com/docs/api/getting-started
+                    ------------------------- STOPPED ----------------------- \n\n\n""")
             exit()
         elif result.status_code == 404: #and "resource could not be found" in str(result.text) --> WRONG SPACE ID
             print("       **ERROR** 404 - Please check if the Space ID in your .ini file is correct.")
@@ -486,7 +487,6 @@ def download_avatars(avatardictionary):
         except Exception as e:
             myErrorList.append("def download_avatars download failed (attempt #" + str(downloadAvatarCount) + ") for user: " + key + " with URL: " + value)
             retryDictionary[key] = value # Create temp dictionary for failed avatar downloads - retry later
-            print("X", end='', flush=True)  # Progress indicator
             continue
     if len(retryDictionary) > 0 and downloadAvatarCount < 4: # Try failed avatar downloads max 3 times
         myErrorList.append("             Avatar download attempt nr. " + str(downloadAvatarCount))
@@ -536,10 +536,10 @@ def get_searchspaces(mytoken):
             result = requests.get('https://api.ciscospark.com/v1/rooms', headers=headers, params=payload)
             if result.status_code == 401:
                 print("    -------------------------- ERROR ------------------------")
-                print("       Please check your Access Token in the .ini file.")
-                print("           Note that your Access Token is only valid for 12 hours.")
-                print("           Go here to get a new token:")
-                print("           https://developer.webex.com/docs/api/getting-started")
+                print("       Please check your Personal Access Token.")
+                print("       Note that your Access Token is only valid for 12 hours.")
+                print("       Go here to get a new token:")
+                print("       https://developer.webex.com/docs/api/getting-started")
                 print("    ------------------------- STOPPED ----------------------- \n\n\n")
                 exit()
             if "Link" in result.headers:  # there's MORE members
@@ -573,31 +573,6 @@ def get_searchspaces(mytoken):
 # ----------------------------------------------------------------------------------------
 # FUNCTION that removes any empty spaces from a dictionary(possible if you only called but did not text)
 def check_empty_space(mytoken, myroom):
-    # clean_dict = dict()
-    # for name, id in space_dict.items():
-    #     headers = {'Authorization': 'Bearer ' + mytoken, 'content-type': 'application/json; charset=utf-8'}
-    #     payload = {'roomId': id, 'max': 10}
-    #     messageCount = 0
-    #     try:
-    #         result = requests.get('https://api.ciscospark.com/v1/messages', headers=headers, params=payload)
-    #         messageCount = len(result.json()["items"])
-    #     except requests.exceptions.RequestException as e: # A serious problem, like an SSLError or InvalidURL
-    #         print("          EXCEPT status_code: " + str(e.status_code))
-    #         print("          EXCEPT text: " + str(e.text))
-    #         print("          EXCEPT headers", e.headers)
-    #         if e.status_code == 429:
-    #             print("          Code 429, waiting for : " + str(sleepTime) + " seconds: ", end='', flush=True)
-    #             for x in range(0, sleepTime):
-    #                 time.sleep(1)
-    #                 print(".", end='', flush=True) # Progress indicator
-    #         else:
-    #             print("          EXCEPT ELSE e:" + e + " e.code:" + e.code)
-    #             break
-    #     if messageCount == 0:
-    #         print(f"{name} has no messages, removing from backup.")
-    #     else:
-    #         clean_dict[name] = id
-    # return clean_dict
     headers = {'Authorization': 'Bearer ' + mytoken, 'content-type': 'application/json; charset=utf-8'}
     payload = {'roomId': id, 'max': 10}
     try:
@@ -697,6 +672,15 @@ elif backup_scope == "3":
 print('Backing up the following chats:')
 print(list(all_ids.keys()))
 
+# =====  GET OWN DETAILS 
+
+try:
+    myOwnDetails = get_me(myToken)
+    myEmail = "".join(myOwnDetails['emails'])
+    myName = myOwnDetails['displayName']
+    myDomain = myEmail.split("@")[1]
+except Exception as e:
+    print("Retrieving own details: **ERROR** : " + str(e))
 
 
 # ===== GET FILE SETTINGS
@@ -722,12 +706,12 @@ if sortOldNew:
 else:
     sortOldNewString = 'New to old'
 
-print(f"""\n\n ----- PARAMETERS:
+print(f"""\n\n #0 ----- PARAMETERS:
 Download: {downloadFiles} - Max messages: {maxMessageString} - Avatars: {userAvatar} - Sorting: {sortOldNewString} - extra output: {outputToJson}""")
 
 
 # ------------------------------- start loop --------------------------------
-print("\n\n #0 ========================= START =========================")
+print("\n\n ========================= START =========================")
 for name, id in all_ids.items():
     myRoom = id
 
@@ -756,7 +740,7 @@ for name, id in all_ids.items():
 
     # =====  GET MESSAGES ==========================================================
     startTimer()
-    print(" #2 ----- Get MESSAGES")
+    print(" #2 ----- Get messages")
     try:
         WebexTeamsMessages = get_messages(myToken, myRoom, 900)
     except Exception as e:
@@ -783,7 +767,7 @@ for name, id in all_ids.items():
     # myMembers used # of space members (stats).
     # myMemberList is used to get the displayName of users (msg only show email address - personEmail)
     startTimer()
-    print(" #3 ----- Get member List") # Put ALL members in a dictionary that contains: "email + fullname"
+    print(" #3 ----- Get member list") # Put ALL members in a dictionary that contains: "email + fullname"
     try:
         myMembers = get_memberships(myToken, myRoom, 500)
         for members in myMembers:
@@ -801,11 +785,11 @@ for name, id in all_ids.items():
 
     # =====  CREATE FOLDERS FOR ATTACHMENTS & AVATARS ==============================
     startTimer()
-    print(f" #4 ---- Creating folder for HTML and attachments. Downloading files or just images: {downloadFiles} ")
+    print(f" #4 ----- Create backup folder")
     if os.path.exists(myAttachmentFolder):
         # If folder already exists, check folder-01, etc., until we can create a new folder.
         folderCounter = 1
-        print(f"             Folder already exists. Checking if {myAttachmentFolder}-{folderCounter:02d} exists!")
+        print(f"          Folder already exists. Checking if {myAttachmentFolder}-{folderCounter:02d} exists!")
         while os.path.exists(f"{myAttachmentFolder}-{folderCounter:02d}"):
             folderCounter += 1
         myAttachmentFolder += f"-{folderCounter:02d}"
@@ -825,7 +809,7 @@ for name, id in all_ids.items():
     # =====  GET MEMBER AVATARS ====================================================
     startTimer()
     if userAvatar == "link" or userAvatar == "download":
-        print(" #5----- Avatars: collecting avatar Data (" + str(len(uniqueUserIds)) + ")  ", end='', flush=True)
+        print(f" #5a ---- Avatars: collecting info of {len(uniqueUserIds)} avatars   ", end='', flush=True)
         userAvatarDict = dict()  # userAvatarDict[your@email.com] = "https://webexteamsavatarurl"
         x=0
         y=len(uniqueUserIds)
@@ -852,27 +836,12 @@ for name, id in all_ids.items():
     startTimer()
     try:
         if userAvatar == "link" or userAvatar == "download":
-            print(" #4c----- MEMBER Avatars: downloading avatar files for " + str(len(userAvatarDict)) + ")  ", end='', flush=True)
+            print(f" #5b ---- Avatars: {userAvatar}ing {len(userAvatarDict)} avatars")
             if userAvatar == "download":
                 download_avatars(userAvatarDict)
-                if downloadAvatarCount > 0:
-                    print("")
     except:
         pass
     stopTimer("download avatars")
-
-
-    # =====  GET MY DETAILS ========================================================
-    startTimer()
-    try:
-        myOwnDetails = get_me(myToken)
-        myEmail = "".join(myOwnDetails['emails'])
-        myName = myOwnDetails['displayName']
-        myDomain = myEmail.split("@")[1]
-        print("\n#5 ----- Get MY details: " + myEmail)
-    except Exception as e:
-        print("\n#5 ----- Get MY details: **ERROR** : " + str(e))
-    stopTimer("get my details")
 
 
     # =====  SET/CREATE VARIABLES ==================================================
@@ -903,7 +872,7 @@ for name, id in all_ids.items():
     # ======  GENERATE HTML HEADER =================================================
     #
     print(" #6 ----- Generate HTML header")
-    print("          Messages Processed:  " + str(statTotalMessages))
+    
     htmlheader = """<!DOCTYPE html><html><head><meta charset="utf-8"/><style type='text/css'>
     body { font-family: 'HelveticaNeue', 'Helvetica Neue', 'Helvetica', 'Arial', 'Lucida Grande', 'sans-serif';
     }
@@ -1187,18 +1156,20 @@ for name, id in all_ids.items():
     #  for all messages (and optionally a .txt file with all messages)
     #
     startTimer()
-    print(" #7 ----- Generate HTML code for each message")
+    print(" #7 ----- Download files and generate HTML code for each message")
     htmldata = ""
     textOutput = ""
     if outputToText:
         textOutput += f"------------------------------------------------------------\n {roomName}\n------------------------------------------------------------\nCREATED:        {currentDate}\nFile Download:  {downloadFiles.upper()}\nGenerated by:   {myName}\nSort old-new:   " + str(sortOldNew).replace("True", "yes (default)").replace("False", "no") + f"\nMax messages:   {maxMessageString}\nAvatar:         {userAvatar} \nversion:        {version} \nTimezone:           {TimezoneName}"
 
-    if downloadFiles in ['images', 'files']:
-        print("          + download " + downloadFiles + " ", end='', flush=True)
+    if downloadFiles == 'images':
+        print("          Downloading image attachments   ", end = '', flush = True)
+    if downloadFiles == 'files':
+        print("          Downloading all attachments    ", end = '', flush = True)
     statTotalMentions = 0
 
     startTimer()
-    sortedMessages = sorted(WebexTeamsMessages, key = lambda i: i['created'],reverse=False)
+    sortedMessages = sorted(WebexTeamsMessages, key = lambda i: i['created'], reverse = False)
     stopTimer("Sort WebexTeamsMessages")
 
     startTimer()
@@ -1380,6 +1351,8 @@ for name, id in all_ids.items():
         if not threaded_message:
             previousMonth = messageMonth
         previousMsgCreated = msg['created']
+    print("")
+    print("          Messages processed:  " + str(statTotalMessages))
     stopTimer("generate HTML")
 
     # ======  *SORT* DOMAIN USER STATISTICS
@@ -1484,7 +1457,7 @@ for name, id in all_ids.items():
     htmlfooter = "<br><br><div class='cssNewMonth' id='endoffile'> end of file &nbsp;&nbsp;<span style='float:right; font-size:16px; margin-right:15px; padding-top:24px;'><a href='#top'>back to top</a></span></div><br><br>"
 
     # ======  PUT EVERYTHING TOGETHER
-    print("\n #8 ----- Finalizing HTML")
+    print(" #8 ----- Finalizing HTML")
     htmldata = htmlheader + newtocList + htmldata + htmlfooter + imagepopuphtml + "</body></html>"
     stopTimer("toc,domainstats,header,footer + combining")
 
@@ -1493,7 +1466,7 @@ for name, id in all_ids.items():
     startTimer()
     with open(myAttachmentFolder + "/" + outputFileName + ".html", 'w', encoding='utf-8') as f:
         print(htmldata, file=f)
-    print(" #9 ------------------------- ready -------------------------\n\n")
+    print("------------------------- ready -------------------------\n\n")
     # beep(1)
     stopTimer("write html to file")
 
