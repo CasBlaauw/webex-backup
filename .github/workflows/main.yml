@@ -5,6 +5,29 @@ on:
     branches: [ main ]
 
 jobs:
+  # Initiate a release to add files to
+  createrelease:
+    name: Create Release
+    runs-on: [ubuntu-latest]
+    steps:
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: "latest"
+        release_name: Current release (${{ github.ref })
+        draft: false
+        prerelease: false
+    - name: Output Release URL File
+      run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
+    - name: Save Release URL File for publish
+      uses: actions/upload-artifact@v1
+      with:
+        name: release_url
+        path: release_url.txt
+  # Create files
   build:
     name: Build packages
     runs-on: ${{ matrix.os }}
@@ -13,7 +36,7 @@ jobs:
         include:
           - os: macos-latest
             TARGET: macos
-            CMD_BUILD: pyinstaller -F -n webex-archive-mac webex-archive.py && cd dist/ && zip -r9 webex-archive-mac.zip webex-archive/
+            CMD_BUILD: pyinstaller -F -n webex-archive-mac webex-archive.py && cd dist/ && zip -r9 webex-archive-mac.zip webex-archive-mac/
             OUT_FILE_NAME: webex-archive.zip
             ASSET_MIME: application/zip
           - os: windows-latest
@@ -33,16 +56,24 @@ jobs:
         pip install -r requirements.txt
     - name: Build with pyinstaller for ${{matrix.TARGET}}
       run: ${{matrix.CMD_BUILD}}
-
-    - uses: "marvinpinto/action-automatic-releases@latest"
+      
+    # Add files to release
+    - name: Get Release File Name & Upload URL
+      id: get_release_info
+      shell: bash
+      run: |
+        value=`cat release_url/release_url.txt`
+        echo ::set-output name=upload_url::$value
+    - name: Upload Release Asset
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "latest"
-        prerelease: False
-        title: "Current version"
-        files: |
-          webex-archive-windows.exe
-          webex-archive-mac.zip
+        upload_url: ${{ steps.get_release_info.outputs.upload_url }}
+        asset_path: ./dist/${{ matrix.OUT_FILE_NAME}}
+        asset_name: ${{ matrix.OUT_FILE_NAME}}
+        asset_content_type: ${{ matrix.ASSET_MIME}}
           
           
   
