@@ -70,6 +70,13 @@ def beep(count): # PLAY SOUND (for errors)
         print(chr(7), end="", flush=True)
     return
 
+def leave():
+    """Pyinstaller-package)d windows programs close instantly when exiting, which makes it impossible to read the message. 
+    Leave() gives people time to read the reason why exit() was called, although it doesn't solve unexpected errors.
+    Those still require running the program from the command line."""
+    print("\nClosing in 30 seconds....")
+    time.sleep(30)
+    exit()
 
 # ----------------------------------------------------------------------------------------
 #   CONFIGURATIONS: Settings to change script behaviour.
@@ -139,7 +146,7 @@ else:
 if goExit:   
     print(goExitError + "\n ------------------------------------------------------------------\n\n")
     beep(3)
-    exit()
+    leave()
 
 
 # ----------------------------------------------------------------------------------------
@@ -149,18 +156,18 @@ if goExit:
 # if len(sys.argv) < 2:
 #     print("You ran the python script without the token. Please run 'python webex-teams-space-archive.py [your_personal_access_token_here]'.")
 #     print("You can generate this token by logging in on 'https://developer.webex.com/docs/api/getting-started' and scrolling down to 'Your Personal Access Token'.")
-#     exit()
+#     leave()
 # if len(sys.argv) > 2:
 #     print("You have too many arguments with your python script. Please run webex-teams-space-archive.py [your_personal_access_token_here]")
 #     print("and make sure there are no accidental spaces in your PAT.")
-#     exit()
+#     leave()
 
 # myToken = sys.argv[1]
 
 
 if len(myToken) < 55:
     print("-----------------   **ERROR** Your personal access token is too short.  -----------------")
-    exit()
+    leave()
 
 
 
@@ -334,7 +341,7 @@ def get_messages(mytoken, myroom, myMaxMessages):
                 break
     if maxTotalMessages == 0:
         print(" **ERROR** there are no messages. Please check your maxMessages setting and try again.")
-        exit()
+        leave()
     return resultjsonmessages[0:maxTotalMessages]
 
 # ----------------------------------------------------------------------------------------
@@ -359,14 +366,14 @@ def get_roomname(mytoken, myroom):
                 Go here to get a new token:
                 https://developer.webex.com/docs/api/getting-started
                     ------------------------- STOPPED ----------------------- \n\n\n""")
-            exit()
+            leave()
         elif result.status_code == 404: #and "resource could not be found" in str(result.text) --> WRONG SPACE ID
             print("       **ERROR** 404 - Please check if the Space ID in your .ini file is correct.")
             print("    ------------------------- STOPPED ----------------------- \n\n\n")
-            exit()
+            leave()
         elif result.status_code != 200:
             print("       **ERROR** <>200 Unknown Error occurred. status code: " + str(result.status_code) + "\n       Info: \n " + result.text)
-            exit()
+            leave()
         elif result.status_code == 200:
             returndata = result.json()['title']
     except Exception as e:
@@ -377,7 +384,7 @@ def get_roomname(mytoken, myroom):
             print("       **ERROR** #1 get_roomname API call status_code: " + str(result.status_code))
             print("       **ERROR** #1 get_roomname API call status text: " + str(result.text))
         beep(3)
-        exit()
+        leave()
     return str(returndata.strip())
 
 
@@ -541,7 +548,7 @@ def get_searchspaces(mytoken):
                 print("       Go here to get a new token:")
                 print("       https://developer.webex.com/docs/api/getting-started")
                 print("    ------------------------- STOPPED ----------------------- \n\n\n")
-                exit()
+                leave()
             if "Link" in result.headers:  # there's MORE members
                 headerLink = result.headers["Link"]
                 myCursor = headerLink[headerLink.find("cursor=")+len("cursor="):headerLink.rfind(">")]
@@ -730,7 +737,7 @@ for name, id in all_ids.items():
         print(" #1 ----- Get space name: **ERROR** getting space name")
         print("             Error message: " + str(e))
         beep(3)
-        exit()
+        leave()
     stopTimer("Get Space Name")
 
     outputFileName = format_filename(roomName)
@@ -747,7 +754,7 @@ for name, id in all_ids.items():
         print(" **ERROR** STEP #2: getting Messages")
         print("             Error message: " + str(e))
         beep(3)
-        exit()
+        leave()
     stopTimer("get messages")
 
 
