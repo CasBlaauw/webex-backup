@@ -15,8 +15,7 @@ jobs:
             TARGET: macos
             CMD_BUILD: >
                 pyinstaller -F -n webex-backup-mac webex-backup.py &&
-                cd dist/ &&
-                zip webex-backup-mac webex-backup-mac.zip/
+                zip dist/webex-backup-mac webex-backup-mac.zip/
             OUT_FILE_NAME: webex-backup-mac.zip
             ASSET_MIME: application/zip
           - os: windows-latest
@@ -33,6 +32,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
+        pip install pyinstaller
         pip install requests
     - name: Build with pyinstaller for ${{matrix.TARGET}}
       run: ${{matrix.CMD_BUILD}}
