@@ -15,3 +15,8 @@ jobs:
       uses: JackMcKew/pyinstaller-action-linux@main
       with:
         path: .
+    
+    - uses: actions/upload-artifact@v2
+      with:
+        name: webex-backup-linux
+        path: dist/linux
