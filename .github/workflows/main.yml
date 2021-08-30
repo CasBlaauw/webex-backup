@@ -37,12 +37,12 @@ jobs:
           - os: macos-latest
             TARGET: macos
             CMD_BUILD: pyinstaller -F -n webex-archive-mac webex-archive.py && cd dist/ && zip -r9 webex-archive-mac.zip webex-archive-mac
-            OUT_FILE_NAME: webex-archive.zip
+            OUT_FILE_NAME: webex-archive-mac.zip
             ASSET_MIME: application/zip
           - os: windows-latest
             TARGET: windows
             CMD_BUILD: pyinstaller -F -n webex-archive-windows webex-archive.py
-            OUT_FILE_NAME: webex-archive.exe
+            OUT_FILE_NAME: webex-archive-windows.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
     steps:
     - uses: actions/checkout@v1
