@@ -16,7 +16,6 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: "latest"
         release_name: Current release (${{ github.ref }})
         draft: false
         prerelease: false
@@ -36,7 +35,7 @@ jobs:
         include:
           - os: macos-latest
             TARGET: macos
-            CMD_BUILD: pyinstaller -F -n webex-archive-mac webex-archive.py && cd dist/ && zip -r9 webex-archive-mac.zip webex-archive-mac/
+            CMD_BUILD: pyinstaller -F -n webex-archive-mac webex-archive.py && cd dist/ && zip -r9 webex-archive-mac.zip webex-archive-mac
             OUT_FILE_NAME: webex-archive.zip
             ASSET_MIME: application/zip
           - os: windows-latest
