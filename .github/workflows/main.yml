@@ -13,14 +13,15 @@ jobs:
         include:
           - os: macos-latest
             TARGET: macos
-            CMD_BUILD: pyinstaller -F -n webex-backup-mac webex-backup.py
+#             CMD_BUILD: pyinstaller -F -n webex-backup-mac webex-backup.py
+            CMD_BUILD: ls -R
             OUT_FILE_NAME: webex-backup-mac.zip
             ASSET_MIME: application/zip
-          - os: windows-latest
-            TARGET: windows
-            CMD_BUILD: pyinstaller -F -n webex-backup-windows webex-backup.py
-            OUT_FILE_NAME: webex-backup-windows.exe
-            ASSET_MIME: application/vnd.microsoft.portable-executable
+#           - os: windows-latest
+#             TARGET: windows
+#             CMD_BUILD: pyinstaller -F -n webex-backup-windows webex-backup.py
+#             OUT_FILE_NAME: webex-backup-windows.exe
+#             ASSET_MIME: application/vnd.microsoft.portable-executable
     steps:
     - uses: actions/checkout@v1
     - name: Set up Python 3.9
