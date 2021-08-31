@@ -885,7 +885,7 @@ for name, id in all_ids.items():
     }
     .cssRoomName {
         height: 88px;
-        background-color: #30A190;
+        background-color: #0571B0;
         font-size: 34px;
         color: #000000;
         padding-left: 30px;
@@ -922,7 +922,7 @@ for name, id in all_ids.items():
 
     .cssNewMonth {
         height: 65px;
-        background-color: #A1D5CF;
+        background-color: #92C5DE;
         font-size: 50px;
         color: #4A4D4A;
         padding-left: 50px;
