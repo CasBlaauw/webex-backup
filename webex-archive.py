@@ -29,16 +29,16 @@ try:
     assert sys.version_info[0:2] >= (3, 6)
 except:
     print("\n\n **ERROR** Minimum Python version is 3.6. Please visit this site to\n           install a newer Python version: https://www.python.org/downloads/ \n\n")
-    exit()
+    sys.exit()
 try:
     import requests
 except ImportError:
     print("\n\n **ERROR** Missing library 'requests'. Please visit the following site to\n           install 'requests': http://docs.python-requests.org/en/master/user/install/ \n\n")
-    exit()
+    sys.exit()
 
 __author__ = "Cas Blaauw"
 __email__ = "cas@clinical-microbiomics.com"
-__version__ = "0.50"
+__version__ = "0.51"
 __copyright__ = "Copyright (c) 2019 Cisco and/or its affiliates."
 __license__ = "Cisco Sample Code License, Version 1.1"
 sleepTime = 3
@@ -76,7 +76,7 @@ def leave():
     Those still require running the program from the command line."""
     print("\nClosing in 30 seconds....")
     time.sleep(30)
-    exit()
+    sys.exit()
 
 # ----------------------------------------------------------------------------------------
 #   CONFIGURATIONS: Settings to change script behaviour.
