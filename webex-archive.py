@@ -38,7 +38,7 @@ except ImportError:
 
 __author__ = "Cas Blaauw"
 __email__ = "cas@clinical-microbiomics.com"
-__version__ = "0.51"
+__version__ = "0.6"
 __copyright__ = "Copyright (c) 2019 Cisco and/or its affiliates."
 __license__ = "Cisco Sample Code License, Version 1.1"
 sleepTime = 3
