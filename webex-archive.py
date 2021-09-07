@@ -569,10 +569,16 @@ def get_searchspaces(mytoken):
                 break
     for found_space in all_spaces:
         try:
-            if found_space['type'] == 'direct': # Manual change: keep spaces that are direct, i.e. one-to-one
-                chat_ids[found_space['title']] = found_space['id']
+            space_name = found_space['title']
+            dup_counter = 1
+            if space_name in chat_ids or space_name in group_ids:
+                while f"{space_name}_{dup_counter}" in chat_ids or f"{space_name}_{dup_counter}" in group_ids:
+                    dup_counter += 1
+                space_name = f"{space_name}_{dup_counter}"
+            if found_space['type'] == 'direct':             
+                chat_ids[space_name] = found_space['id']
             elif found_space['type'] == 'group':
-                group_ids[found_space['title']] = found_space['id']
+                group_ids[space_name] = found_space['id']
         except:
             continue
     return chat_ids, group_ids
@@ -763,12 +769,14 @@ for name, id in all_ids.items():
     #   retrieve details & download/link avatars
     startTimer()
     uniqueUserIds = list()
+    uniqueUserMails = list()
     for myUser in WebexTeamsMessages:
         if myUser['personId'] not in uniqueUserIds:
             uniqueUserIds.append(myUser['personId'])
+            uniqueUserMails.append(myUser['personEmail'])
     stopTimer("get unique user ids")
 
-
+   
 
     # =====  GET MEMBER NAMES ======================================================
     # myMembers used # of space members (stats).
@@ -788,7 +796,16 @@ for name, id in all_ids.items():
         beep(1)
     stopTimer("get memberlist")
 
+ # =====  HANDLE DELETED USERS ==================================================
+    # Chats with deleted users will have 'Empty Title' as their title and don't show the deleted user space members. 
+    # We can extract the name from the sent messages.
 
+    if 'Empty Title' in roomName:
+        backup_email = next(unique_email for unique_email in uniqueUserMails if unique_email != myEmail) 
+        roomName = backup_email.partition('@')[0] + "_old"
+        outputFileName = format_filename(roomName)
+        myAttachmentFolder = os.path.join(runDir, outputFileName)
+        print(f"          Chat with deleted user detected. Using name from email ({outputFileName}) instead.")
 
     # =====  CREATE FOLDERS FOR ATTACHMENTS & AVATARS ==============================
     startTimer()
